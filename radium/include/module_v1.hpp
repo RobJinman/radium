@@ -19,7 +19,7 @@ struct ModuleV1Spec : public ModuleSpec {
   Version version;
   Version minCompatible;
 
-  const ModuleSpec* dependencies;
+  const ModuleSpec** dependencies;
   const ModuleSpec* interfaces;
 
   virtual int moduleApiVersion() const override final {

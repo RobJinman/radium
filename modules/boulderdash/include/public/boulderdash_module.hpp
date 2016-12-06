@@ -13,6 +13,7 @@ class BoulderdashModule : public radium::ModuleV2 {
 
     static const radium::ModuleSpec& spec() {
       static radium::ModuleV2Spec spec = radium::ModuleV2Spec();
+      static const radium::ModuleSpec* dependencies[] = { &RendererModule::spec() };
 
       spec.name = "boulderdash";
       spec.author = "Rob Jinman";
@@ -20,7 +21,7 @@ class BoulderdashModule : public radium::ModuleV2 {
       spec.version = radium::Version(0, 1);
       spec.minCompatible = radium::Version(0, 1);
 
-      spec.dependencies = &RendererModule::spec();
+      spec.dependencies = dependencies;
       spec.interfaces = &radium::BootstrapModule::spec();
 
       return spec;

@@ -13,6 +13,7 @@ class GlRendererModule : public radium::ModuleV2 {
 
     static const radium::ModuleSpec& spec() {
       static radium::ModuleV2Spec spec = radium::ModuleV2Spec();
+      static const radium::ModuleSpec* dependencies[] = {};
 
       spec.name = "gl_renderer";
       spec.author = "Rob Jinman";
@@ -20,7 +21,7 @@ class GlRendererModule : public radium::ModuleV2 {
       spec.version = radium::Version(0, 1);
       spec.minCompatible = radium::Version(0, 1);
 
-      spec.dependencies = nullptr;
+      spec.dependencies = dependencies;
       spec.interfaces = &RendererModule::spec();
 
       return spec;
