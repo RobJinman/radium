@@ -6,7 +6,7 @@ using std::cout;
 
 
 int moduleApiVersion() {
-  return 2;
+  return 1;
 }
 
 void* instantiate(void* handle) {

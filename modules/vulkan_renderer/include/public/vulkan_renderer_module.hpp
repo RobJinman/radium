@@ -1,21 +1,21 @@
-#ifndef GL_RENDERER_MODULE_HPP
-#define GL_RENDERER_MODULE_HPP
+#ifndef VULKAN_RENDERER_MODULE_HPP
+#define VULKAN_RENDERER_MODULE_HPP
 
 
 #include <renderer_module.hpp>
 
 
-class GlRendererModule : public radium::ModuleV1 {
+class VulkanRendererModule : public radium::ModuleV1 {
   public:
-    GlRendererModule(void* handle)
+    VulkanRendererModule(void* handle)
       : ModuleV1(handle) {}
 
     static const radium::ModuleV1Spec& spec() {
       static radium::ModuleV1Spec spec = radium::ModuleV1Spec();
 
-      spec.name = "gl_renderer";
+      spec.name = "vulkan_renderer";
       spec.author = "Rob Jinman";
-      spec.description = "Simple OpenGL renderer";
+      spec.description = "Simple Vulkan renderer";
       spec.version = radium::Version(0, 1);
       spec.minCompatible = radium::Version(0, 1);
 
@@ -28,10 +28,10 @@ class GlRendererModule : public radium::ModuleV1 {
     virtual void initialise() override;
 
     virtual const radium::ModuleV1Spec& getSpec() const override {
-      return GlRendererModule::spec();
+      return VulkanRendererModule::spec();
     }
 
-    virtual ~GlRendererModule() {}
+    virtual ~VulkanRendererModule() {}
 };
 
 

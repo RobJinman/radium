@@ -2,11 +2,15 @@
 #define RADIUM_MODULE_V1_HPP
 
 
+#include <vector>
 #include "module.hpp"
 #include "version.hpp"
 
 
 namespace radium {
+
+
+typedef std::vector<const ModuleSpec*> dependencyList_t;
 
 
 struct ModuleV1Spec : public ModuleSpec {
@@ -19,7 +23,7 @@ struct ModuleV1Spec : public ModuleSpec {
   Version version;
   Version minCompatible;
 
-  const ModuleSpec** dependencies;
+  dependencyList_t dependencies;
   const ModuleSpec* interfaces;
 
   virtual int moduleApiVersion() const override final {
@@ -39,6 +43,7 @@ class ModuleV1 : public Module {
       return 1;
     }
 
+    virtual const ModuleV1Spec& getSpec() const override = 0;
     virtual void initialise() = 0;
 
     virtual ~ModuleV1() {}

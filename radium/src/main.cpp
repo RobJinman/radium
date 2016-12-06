@@ -1,8 +1,11 @@
+#include <iostream>
 #include "module_manager.hpp"
+#include "exception.hpp"
 //#include "bootstrap_module.hpp"
 //#include "bootstrap_service.hpp"
 
 
+using std::cerr;
 using namespace radium;
 
 
@@ -10,13 +13,19 @@ using namespace radium;
 
 
 int main() {
-  ModuleManager& moduleManager = ModuleManager::getInstance();
-  moduleManager.loadModules(MODULE_DIR);
+  try {
+    ModuleManager& moduleManager = ModuleManager::getInstance();
+    moduleManager.loadModules(MODULE_DIR);
 
-//  BootstrapService root;
-//  root.start();
+  //  BootstrapService root;
+  //  root.start();
 
-  moduleManager.unloadModules();
+    moduleManager.unloadModules();
+  }
+  catch (Exception& ex) {
+    cerr << ex.what() << "\n";
+    return EXIT_FAILURE;
+  }
 
   return EXIT_SUCCESS;
 }

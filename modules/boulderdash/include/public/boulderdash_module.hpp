@@ -6,14 +6,13 @@
 #include <renderer_module.hpp>
 
 
-class BoulderdashModule : public radium::ModuleV2 {
+class BoulderdashModule : public radium::ModuleV1 {
   public:
     BoulderdashModule(void* handle)
-      : ModuleV2(handle) {}
+      : ModuleV1(handle) {}
 
-    static const radium::ModuleSpec& spec() {
-      static radium::ModuleV2Spec spec = radium::ModuleV2Spec();
-      static const radium::ModuleSpec* dependencies[] = { &RendererModule::spec() };
+    static const radium::ModuleV1Spec& spec() {
+      static radium::ModuleV1Spec spec = radium::ModuleV1Spec();
 
       spec.name = "boulderdash";
       spec.author = "Rob Jinman";
@@ -21,7 +20,7 @@ class BoulderdashModule : public radium::ModuleV2 {
       spec.version = radium::Version(0, 1);
       spec.minCompatible = radium::Version(0, 1);
 
-      spec.dependencies = dependencies;
+      spec.dependencies = radium::dependencyList_t({ &RendererModule::spec() });
       spec.interfaces = &radium::BootstrapModule::spec();
 
       return spec;
@@ -29,7 +28,7 @@ class BoulderdashModule : public radium::ModuleV2 {
 
     virtual void initialise() override;
 
-    virtual const radium::ModuleSpec& getSpec() const override {
+    virtual const radium::ModuleV1Spec& getSpec() const override {
       return BoulderdashModule::spec();
     }
 

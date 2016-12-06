@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(gl_renderer)
+project(vulkan_renderer)
 
 include_directories(include/public)
 include_directories(include/private)
@@ -17,9 +17,9 @@ else()
 endif()
 
 file(GLOB_RECURSE SRCS src/*.cpp)
-add_library(gl_renderer SHARED ${SRCS})
+add_library(vulkan_renderer SHARED ${SRCS})
 
-set_target_properties(gl_renderer
+set_target_properties(vulkan_renderer
     PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../../radium/build/modules"
 )

@@ -5,41 +5,32 @@
 #include <list>
 #include "module_manager_impl.hpp"
 #include "module_v1.hpp"
-#include "module_v2.hpp"
+#include "exception.hpp"
 
 
 #define DL_CHECK(handle, msg) \
   { \
     const char* err = dlerror(); \
     if (err) { \
-      std::cerr << msg << "; " << err << "\n"; \
       if (handle) { \
         dlclose(handle); \
       } \
-      exit(EXIT_FAILURE); \
+      EXCEPTION(msg << "; " << err) \
     } \
   }
 
 
-using std::cerr;
 using std::cout;
 using std::list;
+using std::map;
 using std::string;
 
 
 namespace radium {
 
 
-static void nonFatal(const string& msg) {
-  cerr << msg << "\n";
-}
-
-Module& ModuleManagerImpl::getModule(moduleName_t name) {
-  return *m_modules.at(name);
-}
-
-void ModuleManagerImpl::printModuleV1Info(const ModuleV1& module) {
-  const ModuleV1Spec& spec = dynamic_cast<const ModuleV1Spec&>(module.getSpec());
+static void printModuleInfo(const ModuleV1& module) {
+  const ModuleV1Spec& spec = module.getSpec();
 
   cout << "*===========================================\n";
   cout << "* " << spec.name << " v" << spec.version << " by " << spec.author << "\n";
@@ -48,39 +39,21 @@ void ModuleManagerImpl::printModuleV1Info(const ModuleV1& module) {
   cout << "*===========================================\n";
 }
 
-void ModuleManagerImpl::printModuleV2Info(const ModuleV2& module) {
-  const ModuleV2Spec& spec = dynamic_cast<const ModuleV2Spec&>(module.getSpec());
-
-  cout << "*===========================================\n";
-  cout << "* " << spec.name << " v" << spec.version << " by " << spec.author << "\n";
-  cout << "*\n";
-  cout << "* " << spec.description << "\n";
-  cout << "*===========================================\n";
-}
-
-Module* ModuleManagerImpl::loadV1Module(void* handle) {
+static ModuleV1* loadModule(void* handle) {
   typedef void* (*fnInstantiate_t)(void*);
-//  typedef void (*fnModuleV1Func_t)(int);
 
   dlerror();
 
   fnInstantiate_t fnInstantiate = reinterpret_cast<fnInstantiate_t>(dlsym(handle, "instantiate"));
   DL_CHECK(handle, "Error loading symbol 'instantiate'");
-
-//  fnModuleV1Func_t fnFunc = reinterpret_cast<fnModuleV1Func_t>(dlsym(handle, "moduleV1Func"));
-//  DL_CHECK(handle, "Error loading symbol 'instantiate'");
 
   ModuleV1* module = reinterpret_cast<ModuleV1*>(fnInstantiate(handle));
-
-//  fnFunc(36);
-
-  printModuleV1Info(*module);
-  module->initialise();
+  printModuleInfo(*module);
 
   return module;
 }
 
-void ModuleManagerImpl::unloadV1Module(ModuleV1* module) {
+static void unloadModule(ModuleV1* module) {
   typedef void (*fnDestroy_t)(void*);
   void* handle = module->handle();
 
@@ -90,43 +63,10 @@ void ModuleManagerImpl::unloadV1Module(ModuleV1* module) {
   DL_CHECK(handle, "Error loading symbol 'destroy'");
 
   fnDestroy(module);
+  dlclose(module->handle());
 }
 
-Module* ModuleManagerImpl::loadV2Module(void* handle) {
-  typedef void* (*fnInstantiate_t)(void*);
-//  typedef void (*fnModuleV2Func_t)(int);
-
-  dlerror();
-
-  fnInstantiate_t fnInstantiate = reinterpret_cast<fnInstantiate_t>(dlsym(handle, "instantiate"));
-  DL_CHECK(handle, "Error loading symbol 'instantiate'");
-
-//  fnModuleV2Func_t fnFunc = reinterpret_cast<fnModuleV2Func_t>(dlsym(handle, "moduleV2Func"));
-//  DL_CHECK(handle, "Error loading symbol 'instantiate'");
-
-  ModuleV2* module = reinterpret_cast<ModuleV2*>(fnInstantiate(handle));
-
-//  fnFunc(47);
-
-  printModuleV2Info(*module);
-  module->initialise();
-
-  return module;
-}
-
-void ModuleManagerImpl::unloadV2Module(ModuleV2* module) {
-  typedef void (*fnDestroy_t)(void*);
-  void* handle = module->handle();
-
-  dlerror();
-
-  fnDestroy_t fnDestroy = reinterpret_cast<fnDestroy_t>(dlsym(handle, "destroy"));
-  DL_CHECK(handle, "Error loading symbol 'destroy'");
-
-  fnDestroy(module);
-}
-
-Module* ModuleManagerImpl::loadModule(const string& path) {
+static ModuleV1* loadModule(const string& path) {
   void* handle = dlopen(path.c_str(), RTLD_LAZY | RTLD_GLOBAL);
   DL_CHECK(handle, "Error loading module");
 
@@ -136,50 +76,61 @@ Module* ModuleManagerImpl::loadModule(const string& path) {
     "moduleApiVersion"));
   DL_CHECK(handle, "Error loading symbol 'moduleApiVersion'");
 
-  Module* module = nullptr;
-
-  switch (fnApiVersion()) {
-    case 0:
-      nonFatal("Error loading module; Module API no longer supported");
-      dlclose(handle);
-    case 1:
-      module = loadV1Module(handle);
-      break;
-    case 2:
-      module = loadV2Module(handle);
-      break;
-    default:
-      nonFatal("Error loading module; Unrecognised API version");
-      dlclose(handle);
+  if (fnApiVersion() != 1) {
+    dlclose(handle);
+    EXCEPTION("Error loading module '" << path << "'; Unrecognised API version");
   }
 
-  return module;
+  return loadModule(handle);
 }
 
-bool ModuleManagerImpl::dependencyMet(const ModuleSpec& needed, const ModuleSpec* available) {
-  return true; /*
-  return any_of(available.begin(), available.end(), [&needed](ModuleDependency dep) {
-    return needed.name == dep.name
-      && needed.version <= dep.version
-      && dep.minCompatible <= needed.version;
-  });*/
+static bool satisfiesDependency_r(const ModuleV1Spec& needed, const ModuleV1Spec* spec) {
+  if (needed.name == spec->name
+    && needed.version <= spec->version
+    && spec->minCompatible <= needed.version) {
+      return true;
+  }
+
+  const ModuleV1Spec* interfaces = dynamic_cast<const ModuleV1Spec*>(spec->interfaces);
+  if (interfaces && satisfiesDependency_r(needed, interfaces)) {
+    return true;
+  }
+
+  return false;
 }
 
-bool ModuleManagerImpl::dependenciesMet(const Module* module, const ModuleSpec* available) {
-  /*
-  for (auto dep : module->dependencies()) {
-    if (dependencyMet(dep, available) == false) {
+static bool dependencyMet(const ModuleV1Spec& needed, list<ModuleV1*> modules) {
+  return any_of(modules.begin(), modules.end(), [&needed](ModuleV1* dep) {
+    return satisfiesDependency_r(needed, &dep->getSpec());
+  });
+}
+
+static bool dependenciesMet(const ModuleV1* module, list<ModuleV1*> modules) {
+  const ModuleV1Spec& spec = module->getSpec();
+
+  for (auto dep : spec.dependencies) {
+    const ModuleV1Spec* depSpec = dynamic_cast<const ModuleV1Spec*>(dep);
+
+    if (dependencyMet(*depSpec, modules) == false) {
       return false;
     }
-  }*/
+  }
 
   return true;
 }
 
-void ModuleManagerImpl::loadModules(const string& moduleDir) {
-  ModuleSpec* available; // TODO
-  list<Module*> modules;
+static void initialiseModules(map<moduleName_t, Module*>& modules) {
+  for (auto entry : modules) {
+    dynamic_cast<ModuleV1*>(entry.second)->initialise();
+  }
+}
 
+Module& ModuleManagerImpl::getModule(moduleName_t name) {
+  return *m_modules.at(name);
+}
+
+void ModuleManagerImpl::loadModules(const string& moduleDir) {
+  list<ModuleV1*> modules;
   DIR* dir = opendir(moduleDir.c_str());
 
   dirent* entity = readdir(dir);
@@ -187,50 +138,35 @@ void ModuleManagerImpl::loadModules(const string& moduleDir) {
     if (entity->d_type == DT_REG) {
       string path = moduleDir + string("/") + entity->d_name;
 
-      Module* module = loadModule(path);
-      const ModuleSpec& spec = module->getSpec();
+      ModuleV1* module = loadModule(path);
 
-      //available.insert(spec->dependencies().begin(), spec->dependencies().end());
-
-      modules.push_back(module);
+      if (module != nullptr) {
+        modules.push_back(module);
+      }
     }
 
     entity = readdir(dir);
   }
 
   for (auto module : modules) {
-    if (dependenciesMet(module, available)) {
-      const ModuleV2Spec& spec = dynamic_cast<const ModuleV2Spec&>(module->getSpec()); // TODO
+    const ModuleV1Spec& spec = module->getSpec();
 
+    if (dependenciesMet(module, modules)) {
       m_modules[spec.name] = module;
     }
     else {
-      nonFatal("Error loading module; Dependencies not met");
-      dlclose(module->handle());
-    }
-  }
-}
-
-void ModuleManagerImpl::unloadModule(moduleName_t name) {
-  Module* module = m_modules[name];
-
-  switch (module->moduleApiVersion()) {
-    case 1: {
-      unloadV1Module(dynamic_cast<ModuleV1*>(module));
-      break;
-    }
-    case 2: {
-      unloadV2Module(dynamic_cast<ModuleV2*>(module));
-      break;
+      unloadModule(module);
+      EXCEPTION("Could not load module '" << spec.name << "'; Dependencies not met");
     }
   }
 
-  m_modules.erase(name);
+  initialiseModules(m_modules);
 }
 
 void ModuleManagerImpl::unloadModules() {
-  for (auto it : m_modules) {
-    unloadModule(it.first);
+  for (auto entry : m_modules) {
+    m_modules.erase(entry.first);
+    unloadModule(dynamic_cast<ModuleV1*>(entry.second));
   }
 }
 
