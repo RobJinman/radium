@@ -3,7 +3,7 @@
 
 
 #include <bootstrap_module.hpp>
-#include <gl_renderer_module.hpp>
+#include <renderer_module.hpp>
 
 
 class BoulderdashModule : public radium::ModuleV2 {
@@ -20,7 +20,7 @@ class BoulderdashModule : public radium::ModuleV2 {
       spec.version = radium::Version(0, 1);
       spec.minCompatible = radium::Version(0, 1);
 
-      spec.dependencies = &GlRendererModule::spec();
+      spec.dependencies = &RendererModule::spec();
       spec.interfaces = &radium::BootstrapModule::spec();
 
       return spec;

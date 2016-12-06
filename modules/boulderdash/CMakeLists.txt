@@ -6,8 +6,7 @@ include_directories(include/public)
 include_directories(include/private)
 include_directories(../../radium/include)
 
-# This module depends on the gl_renderer module
-include_directories(../gl_renderer/include/public)
+# This module depends on the renderer module
 include_directories(../renderer/include/public)
 
 # This module depends on the radium bootstrap module

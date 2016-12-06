@@ -2,17 +2,26 @@
 #define RENDERER_HPP
 
 
-#include "mesh.hpp"
-#include "camera.hpp"
+#include <memory>
+#include "renderer_impl.hpp"
 
+
+class Mesh;
+class Camera;
 
 class Renderer {
   public:
-    Renderer() {}
+    Renderer()
+      : m_impl(Renderer::createImpl()) {}
 
-    virtual void draw(const Mesh& mesh, const Camera& camera) const = 0;
+    void draw(const Mesh& mesh, const Camera& camera) const {
+      m_impl->draw(mesh, camera);
+    }
 
-    virtual ~Renderer() {}
+  private:
+    static RendererImpl* createImpl();
+
+    std::unique_ptr<RendererImpl> m_impl;
 };
 
 

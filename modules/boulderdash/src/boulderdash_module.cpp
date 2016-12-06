@@ -1,7 +1,7 @@
 #include <iostream>
-#include <gl_renderer.hpp>
-#include <gl_camera.hpp>
-#include <gl_mesh.hpp>
+#include <renderer.hpp>
+#include <camera.hpp>
+#include <mesh.hpp>
 #include "boulderdash_module.hpp"
 
 
@@ -31,9 +31,9 @@ void destroy(void* inst) {
 void BoulderdashModule::initialise() {
   cout << "BoulderdashModule::initialise()\n";
 
-  GlRenderer renderer;
-  GlCamera camera;
-  GlMesh mesh;
+  Renderer renderer;
+  Camera camera;
+  Mesh mesh;
 
   renderer.draw(mesh, camera);
 }
