@@ -2,7 +2,6 @@
 #define BOULDERDASH_MODULE_HPP
 
 
-#include <bootstrap_module.hpp>
 #include <renderer_module.hpp>
 
 
@@ -21,12 +20,13 @@ class BoulderdashModule : public radium::ModuleV1 {
       spec.minCompatible = radium::Version(0, 1);
 
       spec.dependencies = radium::dependencyList_t({ &RendererModule::spec() });
-      spec.interfaces = &radium::BootstrapModule::spec();
+      spec.interfaces = nullptr;
 
       return spec;
     }
 
     virtual void initialise() override;
+    virtual void start() override;
 
     virtual const radium::ModuleV1Spec& getSpec() const override {
       return BoulderdashModule::spec();
@@ -34,7 +34,6 @@ class BoulderdashModule : public radium::ModuleV1 {
 
     virtual ~BoulderdashModule() {}
 };
-
 
 
 #endif

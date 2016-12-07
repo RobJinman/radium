@@ -19,6 +19,8 @@ class ModuleManager {
     void loadModules(const std::string& moduleDir);
     void unloadModules();
 
+    void foo();
+
     Module& getModule(moduleName_t name);
 
   private:

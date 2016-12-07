@@ -135,7 +135,17 @@ static void initialiseModules(map<moduleName_t, Module*>& modules) {
   }
 }
 
+static void startModules(map<moduleName_t, Module*>& modules) {
+  for (auto entry : modules) {
+    dynamic_cast<ModuleV1*>(entry.second)->start();
+  }
+}
+
 ModuleManager::ModuleManager() {}
+
+void ModuleManager::foo() {
+  std::cout << "ModuleManager::foo()\n";
+}
 
 Module& ModuleManager::getModule(moduleName_t name) {
   return *m_modules.at(name);
@@ -173,6 +183,7 @@ void ModuleManager::loadModules(const string& moduleDir) {
   }
 
   initialiseModules(m_modules);
+  startModules(m_modules);
 }
 
 void ModuleManager::unloadModules() {

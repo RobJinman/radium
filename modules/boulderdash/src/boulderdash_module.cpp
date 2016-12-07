@@ -30,6 +30,10 @@ void destroy(void* inst) {
 
 void BoulderdashModule::initialise() {
   cout << "BoulderdashModule::initialise()\n";
+}
+
+void BoulderdashModule::start() {
+  cout << "BoulderdashModule::start()\n";
 
   Renderer renderer;
   Camera camera;

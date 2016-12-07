@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 2.8)
 
 project(radium)
 
-include_directories(include)
-include_directories(modules/radium_bootstrap/include/public)
+include_directories(include/public)
+include_directories(include/private)
 
 set(CMAKE_CXX_FLAGS "-std=c++11 -Wall")
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")

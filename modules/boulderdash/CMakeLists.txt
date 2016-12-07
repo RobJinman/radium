@@ -4,7 +4,7 @@ project(boulderdash)
 
 include_directories(include/public)
 include_directories(include/private)
-include_directories(../../radium/include)
+include_directories(../../radium/include/public)
 
 # This module depends on the renderer module
 include_directories(../renderer/include/public)

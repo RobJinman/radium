@@ -45,6 +45,7 @@ class ModuleV1 : public Module {
 
     virtual const ModuleV1Spec& getSpec() const override = 0;
     virtual void initialise() = 0;
+    virtual void start() {}
 
     virtual ~ModuleV1() {}
 };
