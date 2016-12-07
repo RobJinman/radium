@@ -3,14 +3,12 @@
 
 
 #include <string>
-#include <memory>
+#include <map>
 #include "module.hpp"
 
 
 namespace radium {
 
-
-class ModuleManagerImpl;
 
 class ModuleManager {
   public:
@@ -25,7 +23,7 @@ class ModuleManager {
 
   private:
     static ModuleManager* instance;
-    std::unique_ptr<ModuleManagerImpl> m_impl;
+    std::map<moduleName_t, Module*> m_modules;
 };
 
 
