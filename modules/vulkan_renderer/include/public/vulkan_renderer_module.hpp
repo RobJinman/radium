@@ -7,7 +7,7 @@
 
 class VulkanRendererModule : public radium::ModuleV1 {
   public:
-    VulkanRendererModule(void* handle)
+    explicit VulkanRendererModule(void* handle)
       : ModuleV1(handle) {}
 
     static const radium::ModuleV1Spec& spec() {

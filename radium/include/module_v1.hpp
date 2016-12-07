@@ -36,7 +36,7 @@ struct ModuleV1Spec : public ModuleSpec {
 
 class ModuleV1 : public Module {
   public:
-    ModuleV1(void* handle)
+    explicit ModuleV1(void* handle)
       : Module(handle) {}
 
     virtual int moduleApiVersion() const override final {

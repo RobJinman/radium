@@ -8,7 +8,7 @@
 
 class BoulderdashModule : public radium::ModuleV1 {
   public:
-    BoulderdashModule(void* handle)
+    explicit BoulderdashModule(void* handle)
       : ModuleV1(handle) {}
 
     static const radium::ModuleV1Spec& spec() {

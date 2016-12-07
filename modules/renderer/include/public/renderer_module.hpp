@@ -7,7 +7,7 @@
 
 class RendererModule : public radium::ModuleV1 {
   public:
-    RendererModule(void* handle)
+    explicit RendererModule(void* handle)
       : ModuleV1(handle) {}
 
     static const radium::ModuleV1Spec& spec() {

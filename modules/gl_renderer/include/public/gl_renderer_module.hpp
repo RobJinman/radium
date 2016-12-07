@@ -7,7 +7,7 @@
 
 class GlRendererModule : public radium::ModuleV1 {
   public:
-    GlRendererModule(void* handle)
+    explicit GlRendererModule(void* handle)
       : ModuleV1(handle) {}
 
     static const radium::ModuleV1Spec& spec() {

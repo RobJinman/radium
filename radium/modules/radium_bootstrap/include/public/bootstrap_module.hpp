@@ -10,7 +10,7 @@ namespace radium {
 
 class BootstrapModule : public ModuleV1 {
   public:
-    BootstrapModule(void* handle)
+    explicit BootstrapModule(void* handle)
       : ModuleV1(handle) {}
 
     static const ModuleV1Spec& spec() {

@@ -18,7 +18,7 @@ struct ModuleSpec {
 
 class Module {
   public:
-    Module(void* handle)
+    explicit Module(void* handle)
       : m_handle(handle) {}
 
     virtual const ModuleSpec& getSpec() const = 0;
