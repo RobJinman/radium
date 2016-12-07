@@ -35,5 +35,4 @@ class VulkanRendererModule : public radium::ModuleV1 {
 };
 
 
-
 #endif

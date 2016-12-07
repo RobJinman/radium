@@ -35,5 +35,4 @@ class GlRendererModule : public radium::ModuleV1 {
 };
 
 
-
 #endif

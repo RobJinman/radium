@@ -49,7 +49,7 @@ static void printModuleInfo(const ModuleV1& module) {
   cout << "*===========================================\n";
 }
 
-static ModuleV1* loadModule(void* handle) {
+static ModuleV1* loadModuleFromLib(void* handle) {
   typedef void* (*fnInstantiate_t)(void*);
 
   dlerror();
@@ -63,7 +63,7 @@ static ModuleV1* loadModule(void* handle) {
   return module;
 }
 
-static void unloadModule(ModuleV1* module) {
+static void destroyModule(ModuleV1* module) {
   typedef void (*fnDestroy_t)(void*);
   void* handle = module->handle();
 
@@ -76,7 +76,7 @@ static void unloadModule(ModuleV1* module) {
   dlclose(module->handle());
 }
 
-static ModuleV1* loadModule(const string& path) {
+static ModuleV1* loadModuleFromPath(const string& path) {
   void* handle = dlopen(path.c_str(), RTLD_LAZY | RTLD_GLOBAL);
   DL_CHECK(handle, "Error loading module");
 
@@ -91,7 +91,7 @@ static ModuleV1* loadModule(const string& path) {
     EXCEPTION("Error loading module '" << path << "'; Unrecognised API version");
   }
 
-  return loadModule(handle);
+  return loadModuleFromLib(handle);
 }
 
 static bool satisfiesDependency_r(const ModuleV1Spec& needed, const ModuleV1Spec* spec) {
@@ -147,8 +147,23 @@ void ModuleManager::foo() {
   std::cout << "ModuleManager::foo()\n";
 }
 
+/*
 Module& ModuleManager::getModule(moduleName_t name) {
   return *m_modules.at(name);
+}*/
+
+const ModuleSpec& ModuleManager::loadModule(const string& path) {
+  return loadModuleFromPath(path)->getSpec();
+}
+
+void ModuleManager::unloadModule(const ModuleSpec& spec) {
+  const ModuleV1Spec& v1spec = dynamic_cast<const ModuleV1Spec&>(spec);
+  auto it = m_modules.find(v1spec.name);
+
+  if (it != m_modules.end()) {
+    m_modules.erase(it);
+    destroyModule(dynamic_cast<ModuleV1*>(it->second));
+  }
 }
 
 void ModuleManager::loadModules(const string& moduleDir) {
@@ -160,7 +175,7 @@ void ModuleManager::loadModules(const string& moduleDir) {
     if (entity->d_type == DT_REG) {
       string path = moduleDir + string("/") + entity->d_name;
 
-      ModuleV1* module = loadModule(path);
+      ModuleV1* module = loadModuleFromPath(path);
 
       if (module != nullptr) {
         modules.push_back(module);
@@ -177,7 +192,7 @@ void ModuleManager::loadModules(const string& moduleDir) {
       m_modules[spec.name] = module;
     }
     else {
-      unloadModule(module);
+      destroyModule(module);
       EXCEPTION("Could not load module '" << spec.name << "'; Dependencies not met");
     }
   }
@@ -189,7 +204,7 @@ void ModuleManager::loadModules(const string& moduleDir) {
 void ModuleManager::unloadModules() {
   for (auto entry : m_modules) {
     m_modules.erase(entry.first);
-    unloadModule(dynamic_cast<ModuleV1*>(entry.second));
+    destroyModule(dynamic_cast<ModuleV1*>(entry.second));
   }
 }
 

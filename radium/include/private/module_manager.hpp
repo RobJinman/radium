@@ -14,16 +14,18 @@ class ModuleManager {
   public:
     static ModuleManager& getInstance();
 
-    ModuleManager();
-
     void loadModules(const std::string& moduleDir);
     void unloadModules();
 
+    const ModuleSpec& loadModule(const std::string& path);
+    void unloadModule(const ModuleSpec& spec);
+
+    //Module& getModule(moduleName_t name);
     void foo();
 
-    Module& getModule(moduleName_t name);
-
   private:
+    ModuleManager();
+
     static ModuleManager* instance;
     std::map<moduleName_t, Module*> m_modules;
 };

@@ -9,9 +9,6 @@ include_directories(../../radium/include/public)
 # This module depends on the renderer module
 include_directories(../renderer/include/public)
 
-# This module depends on the radium bootstrap module
-include_directories(../../radium/modules/radium_bootstrap/include/public)
-
 set(CMAKE_CXX_FLAGS "-std=c++11 -Wall")
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -DDEBUG")
