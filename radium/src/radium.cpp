@@ -14,7 +14,7 @@ using std::cerr;
 
 int main() {
   radium::Radium radium;
-  radium.start();
+  return radium.start();
 }
 
 
