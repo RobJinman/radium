@@ -7,8 +7,8 @@
 VulkanRendererImpl::VulkanRendererImpl()
   : RendererImpl() {
 
-    m_num = 555;
-  }
+  m_num = 555;
+}
 
 void VulkanRendererImpl::draw(const Mesh& mesh, const Camera& camera) const {
   std::cout << "VulkanRendererImpl::draw(), m_num = " << m_num << "\n";

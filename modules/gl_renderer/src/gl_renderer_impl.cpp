@@ -7,8 +7,8 @@
 GlRendererImpl::GlRendererImpl()
   : RendererImpl() {
 
-    m_num = 987;
-  }
+  m_num = 987;
+}
 
 void GlRendererImpl::draw(const Mesh& mesh, const Camera& camera) const {
   std::cout << "GlRendererImpl::draw(), m_num = " << m_num << "\n";
