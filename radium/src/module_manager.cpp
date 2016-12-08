@@ -133,12 +133,6 @@ static void initialiseModules(map<moduleName_t, Module*>& modules) {
   }
 }
 
-static void startModules(map<moduleName_t, Module*>& modules) {
-  for (auto entry : modules) {
-    entry.second->start();
-  }
-}
-
 ModuleManager::ModuleManager() {}
 
 void ModuleManager::foo() {
@@ -176,6 +170,10 @@ void ModuleManager::loadModules(const string& moduleDir) {
 
       if (module != nullptr) {
         modules.push_back(module);
+
+        if (module->getSpec().isRoot) {
+          m_rootModule = dynamic_cast<RootModule*>(module);
+        }
       }
     }
 
@@ -195,11 +193,18 @@ void ModuleManager::loadModules(const string& moduleDir) {
   }
 
   initialiseModules(m_modules);
-  startModules(m_modules);
+
+  if (m_rootModule != nullptr) {
+    m_rootModule->start(&m_api);
+  }
 }
 
 void ModuleManager::unloadModules() {
   for (auto entry : m_modules) {
+    if (entry.second->getSpec().isRoot) {
+      m_rootModule = nullptr;
+    }
+
     m_modules.erase(entry.first);
     destroyModule(entry.second);
   }

@@ -4,7 +4,8 @@
 
 #include <string>
 #include <map>
-#include "module.hpp"
+#include "root_module.hpp"
+#include "api.hpp"
 
 
 namespace radium {
@@ -27,7 +28,10 @@ class ModuleManager {
     ModuleManager();
 
     static ModuleManager* instance;
+
+    Api m_api;
     std::map<moduleName_t, Module*> m_modules;
+    RootModule* m_rootModule;
 };
 
 

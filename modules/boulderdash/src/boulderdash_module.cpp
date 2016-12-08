@@ -2,7 +2,7 @@
 #include <renderer.hpp>
 #include <camera.hpp>
 #include <mesh.hpp>
-#include <module_loader.hpp>
+#include <api.hpp>
 #include "boulderdash_module.hpp"
 
 
@@ -33,7 +33,7 @@ void BoulderdashModule::initialise() {
   cout << "BoulderdashModule::initialise()\n";
 }
 
-void BoulderdashModule::start() {
+void BoulderdashModule::start(radium::Api* api) {
   cout << "BoulderdashModule::start()\n";
 
   Renderer renderer;
@@ -42,5 +42,5 @@ void BoulderdashModule::start() {
 
   renderer.draw(mesh, camera);
 
-  radium::ModuleLoader::getInstance().foo();
+  api->foo();
 }

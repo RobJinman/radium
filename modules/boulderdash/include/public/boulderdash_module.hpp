@@ -3,16 +3,18 @@
 
 
 #include <renderer_module.hpp>
+#include <root_module.hpp>
 
 
-class BoulderdashModule : public radium::Module {
+class BoulderdashModule : public radium::RootModule {
   public:
     explicit BoulderdashModule(void* handle)
-      : Module(handle) {}
+      : RootModule(handle) {}
 
     static const radium::ModuleSpec& spec() {
       static radium::ModuleSpec spec = radium::ModuleSpec();
 
+      spec.isRoot = true;
       spec.name = "boulderdash";
       spec.author = "Rob Jinman";
       spec.description = "The classic game of Boulderdash";
@@ -26,7 +28,7 @@ class BoulderdashModule : public radium::Module {
     }
 
     virtual void initialise() override;
-    virtual void start() override;
+    virtual void start(radium::Api* api) override;
 
     virtual const radium::ModuleSpec& getSpec() const override {
       return BoulderdashModule::spec();

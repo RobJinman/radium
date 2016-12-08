@@ -17,13 +17,16 @@ typedef std::vector<const ModuleSpec*> dependencyList_t;
 
 
 struct ModuleSpec {
-  ModuleSpec() {}
+  ModuleSpec()
+    : isRoot(false),
+      interfaces(nullptr) {}
 
   moduleName_t name;
   std::string author;
   std::string description;
   Version version;
   Version minCompatible;
+  bool isRoot;
 
   dependencyList_t dependencies;
   const ModuleSpec* interfaces;
@@ -52,7 +55,6 @@ class Module {
 
     virtual const ModuleSpec& getSpec() const = 0;
     virtual void initialise() {}
-    virtual void start() {}
 
     virtual ~Module() {}
 
