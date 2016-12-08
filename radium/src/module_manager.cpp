@@ -5,6 +5,7 @@
 #include <list>
 #include "module_manager.hpp"
 #include "exception.hpp"
+#include "root_module.hpp"
 
 
 #define DL_CHECK(handle, msg) \
@@ -27,16 +28,6 @@ using std::string;
 
 namespace radium {
 
-
-ModuleManager* ModuleManager::instance = nullptr;
-
-ModuleManager& ModuleManager::getInstance() {
-  if (ModuleManager::instance == nullptr) {
-    ModuleManager::instance = new ModuleManager();
-  }
-
-  return *ModuleManager::instance;
-}
 
 static void printModuleInfo(const Module& module) {
   const ModuleSpec& spec = module.getSpec();
@@ -157,8 +148,9 @@ void ModuleManager::unloadModule(const ModuleSpec& spec) {
   }
 }
 
-void ModuleManager::loadModules(const string& moduleDir) {
+RootModule* ModuleManager::loadModules(const string& moduleDir) {
   list<Module*> modules;
+  RootModule* rootModule = nullptr;
   DIR* dir = opendir(moduleDir.c_str());
 
   dirent* entity = readdir(dir);
@@ -172,7 +164,7 @@ void ModuleManager::loadModules(const string& moduleDir) {
         modules.push_back(module);
 
         if (module->getSpec().isRoot) {
-          m_rootModule = dynamic_cast<RootModule*>(module);
+          rootModule = dynamic_cast<RootModule*>(module);
         }
       }
     }
@@ -194,17 +186,11 @@ void ModuleManager::loadModules(const string& moduleDir) {
 
   initialiseModules(m_modules);
 
-  if (m_rootModule != nullptr) {
-    m_rootModule->start(&m_api);
-  }
+  return rootModule;
 }
 
 void ModuleManager::unloadModules() {
   for (auto entry : m_modules) {
-    if (entry.second->getSpec().isRoot) {
-      m_rootModule = nullptr;
-    }
-
     m_modules.erase(entry.first);
     destroyModule(entry.second);
   }

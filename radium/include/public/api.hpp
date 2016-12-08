@@ -9,9 +9,10 @@ namespace radium {
 
 
 class ModuleSpec;
+class ModuleManager;
 
 class Api {
-  friend class ModuleManager;
+  friend class Radium;
 
   public:
     const ModuleSpec& loadModule(const std::string& path);
@@ -20,7 +21,9 @@ class Api {
     void foo(); // TODO
 
   private:
-    Api();
+    Api(ModuleManager& moduleManager);
+
+    ModuleManager& m_moduleManager;
 };
 
 

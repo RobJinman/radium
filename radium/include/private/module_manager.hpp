@@ -4,18 +4,19 @@
 
 #include <string>
 #include <map>
-#include "root_module.hpp"
-#include "api.hpp"
+#include "module.hpp"
 
 
 namespace radium {
 
 
-class ModuleManager {
-  public:
-    static ModuleManager& getInstance();
+class RootModule;
 
-    void loadModules(const std::string& moduleDir);
+class ModuleManager {
+  friend class Radium;
+  
+  public:
+    RootModule* loadModules(const std::string& moduleDir);
     void unloadModules();
 
     const ModuleSpec& loadModule(const std::string& path);
@@ -27,11 +28,7 @@ class ModuleManager {
   private:
     ModuleManager();
 
-    static ModuleManager* instance;
-
-    Api m_api;
     std::map<moduleName_t, Module*> m_modules;
-    RootModule* m_rootModule;
 };
 
 
