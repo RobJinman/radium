@@ -2,16 +2,16 @@
 #define RENDERER_MODULE_HPP
 
 
-#include <module_v1.hpp>
+#include <module.hpp>
 
 
-class RendererModule : public radium::ModuleV1 {
+class RendererModule : public radium::Module {
   public:
     explicit RendererModule(void* handle)
-      : ModuleV1(handle) {}
+      : Module(handle) {}
 
-    static const radium::ModuleV1Spec& spec() {
-      static radium::ModuleV1Spec spec = radium::ModuleV1Spec();
+    static const radium::ModuleSpec& spec() {
+      static radium::ModuleSpec spec = radium::ModuleSpec();
 
       spec.name = "renderer";
       spec.author = "Rob Jinman";
@@ -25,7 +25,7 @@ class RendererModule : public radium::ModuleV1 {
       return spec;
     }
 
-    virtual const radium::ModuleV1Spec& getSpec() const override {
+    virtual const radium::ModuleSpec& getSpec() const override {
       return RendererModule::spec();
     }
 

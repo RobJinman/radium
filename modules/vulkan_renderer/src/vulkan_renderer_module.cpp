@@ -15,10 +15,6 @@ void* instantiate(void* handle) {
   return new VulkanRendererModule(handle);
 }
 
-void pluginV2Func(int i) {
-  cout << "vulkan_renderer_module, PluginV2Func, i = " << i << "\n";
-}
-
 void destroy(void* inst) {
   cout << "Destroying instance of VulkanRendererModule\n";
   delete reinterpret_cast<VulkanRendererModule*>(inst);

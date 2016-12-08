@@ -15,10 +15,6 @@ void* instantiate(void* handle) {
   return new GlRendererModule(handle);
 }
 
-void pluginV2Func(int i) {
-  cout << "gl_renderer_module, PluginV2Func, i = " << i << "\n";
-}
-
 void destroy(void* inst) {
   cout << "Destroying instance of GlRendererModule\n";
   delete reinterpret_cast<GlRendererModule*>(inst);

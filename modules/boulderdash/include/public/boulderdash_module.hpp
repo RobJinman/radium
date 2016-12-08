@@ -5,13 +5,13 @@
 #include <renderer_module.hpp>
 
 
-class BoulderdashModule : public radium::ModuleV1 {
+class BoulderdashModule : public radium::Module {
   public:
     explicit BoulderdashModule(void* handle)
-      : ModuleV1(handle) {}
+      : Module(handle) {}
 
-    static const radium::ModuleV1Spec& spec() {
-      static radium::ModuleV1Spec spec = radium::ModuleV1Spec();
+    static const radium::ModuleSpec& spec() {
+      static radium::ModuleSpec spec = radium::ModuleSpec();
 
       spec.name = "boulderdash";
       spec.author = "Rob Jinman";
@@ -28,7 +28,7 @@ class BoulderdashModule : public radium::ModuleV1 {
     virtual void initialise() override;
     virtual void start() override;
 
-    virtual const radium::ModuleV1Spec& getSpec() const override {
+    virtual const radium::ModuleSpec& getSpec() const override {
       return BoulderdashModule::spec();
     }
 

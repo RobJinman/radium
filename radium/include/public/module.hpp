@@ -3,16 +3,36 @@
 
 
 #include <string>
+#include <vector>
+#include "version.hpp"
 
 
 namespace radium {
 
 
+class ModuleSpec;
+
 typedef std::string moduleName_t;
+typedef std::vector<const ModuleSpec*> dependencyList_t;
 
 
 struct ModuleSpec {
-  virtual int moduleApiVersion() const = 0;
+  ModuleSpec() {}
+
+  moduleName_t name;
+  std::string author;
+  std::string description;
+  Version version;
+  Version minCompatible;
+
+  dependencyList_t dependencies;
+  const ModuleSpec* interfaces;
+
+  int moduleApiVersion() const {
+    return 1;
+  }
+
+  virtual ~ModuleSpec() {}
 };
 
 
@@ -21,13 +41,20 @@ class Module {
     explicit Module(void* handle)
       : m_handle(handle) {}
 
-    virtual const ModuleSpec& getSpec() const = 0;
 
     void* handle() const {
       return m_handle;
     }
 
-    virtual int moduleApiVersion() const = 0;
+    int moduleApiVersion() const {
+      return 1;
+    }
+
+    virtual const ModuleSpec& getSpec() const = 0;
+    virtual void initialise() {}
+    virtual void start() {}
+
+    virtual ~Module() {}
 
   private:
     void* m_handle;
@@ -35,6 +62,11 @@ class Module {
 
 
 }
+
+
+extern "C" int moduleApiVersion();
+extern "C" void* instantiate(void* handle);
+extern "C" void destroy(void* inst);
 
 
 #endif

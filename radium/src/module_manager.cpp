@@ -4,7 +4,6 @@
 #include <algorithm>
 #include <list>
 #include "module_manager.hpp"
-#include "module_v1.hpp"
 #include "exception.hpp"
 
 
@@ -39,8 +38,8 @@ ModuleManager& ModuleManager::getInstance() {
   return *ModuleManager::instance;
 }
 
-static void printModuleInfo(const ModuleV1& module) {
-  const ModuleV1Spec& spec = module.getSpec();
+static void printModuleInfo(const Module& module) {
+  const ModuleSpec& spec = module.getSpec();
 
   cout << "*===========================================\n";
   cout << "* " << spec.name << " v" << spec.version << " by " << spec.author << "\n";
@@ -49,7 +48,7 @@ static void printModuleInfo(const ModuleV1& module) {
   cout << "*===========================================\n";
 }
 
-static ModuleV1* loadModuleFromLib(void* handle) {
+static Module* loadModuleFromLib(void* handle) {
   typedef void* (*fnInstantiate_t)(void*);
 
   dlerror();
@@ -57,13 +56,13 @@ static ModuleV1* loadModuleFromLib(void* handle) {
   fnInstantiate_t fnInstantiate = reinterpret_cast<fnInstantiate_t>(dlsym(handle, "instantiate"));
   DL_CHECK(handle, "Error loading symbol 'instantiate'");
 
-  ModuleV1* module = reinterpret_cast<ModuleV1*>(fnInstantiate(handle));
+  Module* module = reinterpret_cast<Module*>(fnInstantiate(handle));
   printModuleInfo(*module);
 
   return module;
 }
 
-static void destroyModule(ModuleV1* module) {
+static void destroyModule(Module* module) {
   typedef void (*fnDestroy_t)(void*);
   void* handle = module->handle();
 
@@ -76,7 +75,9 @@ static void destroyModule(ModuleV1* module) {
   dlclose(module->handle());
 }
 
-static ModuleV1* loadModuleFromPath(const string& path) {
+static Module* loadModuleFromPath(const string& path) {
+  dlerror();
+
   void* handle = dlopen(path.c_str(), RTLD_LAZY | RTLD_GLOBAL);
   DL_CHECK(handle, "Error loading module");
 
@@ -94,34 +95,31 @@ static ModuleV1* loadModuleFromPath(const string& path) {
   return loadModuleFromLib(handle);
 }
 
-static bool satisfiesDependency_r(const ModuleV1Spec& needed, const ModuleV1Spec* spec) {
-  if (needed.name == spec->name
-    && needed.version <= spec->version
-    && spec->minCompatible <= needed.version) {
+static bool satisfiesDependency_r(const ModuleSpec& needed, const ModuleSpec& spec) {
+  if (needed.name == spec.name
+    && needed.version <= spec.version
+    && spec.minCompatible <= needed.version) {
       return true;
   }
 
-  const ModuleV1Spec* interfaces = dynamic_cast<const ModuleV1Spec*>(spec->interfaces);
-  if (interfaces && satisfiesDependency_r(needed, interfaces)) {
+  if (spec.interfaces && satisfiesDependency_r(needed, *spec.interfaces)) {
     return true;
   }
 
   return false;
 }
 
-static bool dependencyMet(const ModuleV1Spec& needed, list<ModuleV1*> modules) {
-  return any_of(modules.begin(), modules.end(), [&needed](ModuleV1* dep) {
-    return satisfiesDependency_r(needed, &dep->getSpec());
+static bool dependencyMet(const ModuleSpec& needed, list<Module*> modules) {
+  return any_of(modules.begin(), modules.end(), [&needed](Module* dep) {
+    return satisfiesDependency_r(needed, dep->getSpec());
   });
 }
 
-static bool dependenciesMet(const ModuleV1* module, list<ModuleV1*> modules) {
-  const ModuleV1Spec& spec = module->getSpec();
+static bool dependenciesMet(const Module* module, list<Module*> modules) {
+  const ModuleSpec& spec = module->getSpec();
 
   for (auto dep : spec.dependencies) {
-    const ModuleV1Spec* depSpec = dynamic_cast<const ModuleV1Spec*>(dep);
-
-    if (dependencyMet(*depSpec, modules) == false) {
+    if (dependencyMet(*dep, modules) == false) {
       return false;
     }
   }
@@ -131,13 +129,13 @@ static bool dependenciesMet(const ModuleV1* module, list<ModuleV1*> modules) {
 
 static void initialiseModules(map<moduleName_t, Module*>& modules) {
   for (auto entry : modules) {
-    dynamic_cast<ModuleV1*>(entry.second)->initialise();
+    entry.second->initialise();
   }
 }
 
 static void startModules(map<moduleName_t, Module*>& modules) {
   for (auto entry : modules) {
-    dynamic_cast<ModuleV1*>(entry.second)->start();
+    entry.second->start();
   }
 }
 
@@ -157,17 +155,16 @@ const ModuleSpec& ModuleManager::loadModule(const string& path) {
 }
 
 void ModuleManager::unloadModule(const ModuleSpec& spec) {
-  const ModuleV1Spec& v1spec = dynamic_cast<const ModuleV1Spec&>(spec);
-  auto it = m_modules.find(v1spec.name);
+  auto it = m_modules.find(spec.name);
 
   if (it != m_modules.end()) {
     m_modules.erase(it);
-    destroyModule(dynamic_cast<ModuleV1*>(it->second));
+    destroyModule(it->second);
   }
 }
 
 void ModuleManager::loadModules(const string& moduleDir) {
-  list<ModuleV1*> modules;
+  list<Module*> modules;
   DIR* dir = opendir(moduleDir.c_str());
 
   dirent* entity = readdir(dir);
@@ -175,7 +172,7 @@ void ModuleManager::loadModules(const string& moduleDir) {
     if (entity->d_type == DT_REG) {
       string path = moduleDir + string("/") + entity->d_name;
 
-      ModuleV1* module = loadModuleFromPath(path);
+      Module* module = loadModuleFromPath(path);
 
       if (module != nullptr) {
         modules.push_back(module);
@@ -186,7 +183,7 @@ void ModuleManager::loadModules(const string& moduleDir) {
   }
 
   for (auto module : modules) {
-    const ModuleV1Spec& spec = module->getSpec();
+    const ModuleSpec& spec = module->getSpec();
 
     if (dependenciesMet(module, modules)) {
       m_modules[spec.name] = module;
@@ -204,7 +201,7 @@ void ModuleManager::loadModules(const string& moduleDir) {
 void ModuleManager::unloadModules() {
   for (auto entry : m_modules) {
     m_modules.erase(entry.first);
-    destroyModule(dynamic_cast<ModuleV1*>(entry.second));
+    destroyModule(entry.second);
   }
 }
 

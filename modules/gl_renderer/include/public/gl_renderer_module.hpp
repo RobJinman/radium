@@ -5,13 +5,13 @@
 #include <renderer_module.hpp>
 
 
-class GlRendererModule : public radium::ModuleV1 {
+class GlRendererModule : public radium::Module {
   public:
     explicit GlRendererModule(void* handle)
-      : ModuleV1(handle) {}
+      : Module(handle) {}
 
-    static const radium::ModuleV1Spec& spec() {
-      static radium::ModuleV1Spec spec = radium::ModuleV1Spec();
+    static const radium::ModuleSpec& spec() {
+      static radium::ModuleSpec spec = radium::ModuleSpec();
 
       spec.name = "gl_renderer";
       spec.author = "Rob Jinman";
@@ -27,7 +27,7 @@ class GlRendererModule : public radium::ModuleV1 {
 
     virtual void initialise() override;
 
-    virtual const radium::ModuleV1Spec& getSpec() const override {
+    virtual const radium::ModuleSpec& getSpec() const override {
       return GlRendererModule::spec();
     }
 
