@@ -1,1 +1,2 @@
 - Demonstrate runtime module swapping
+- Module repository and manifest file, so not all modules need to be loaded

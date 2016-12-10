@@ -24,11 +24,16 @@ using std::cout;
 using std::list;
 using std::map;
 using std::string;
+using std::pair;
+using std::set;
 
 
 namespace radium {
 
 
+//=============================================
+// printModuleInfo
+//=============================================
 static void printModuleInfo(const Module& module) {
   const ModuleSpec& spec = module.getSpec();
 
@@ -39,6 +44,9 @@ static void printModuleInfo(const Module& module) {
   cout << "*===========================================\n";
 }
 
+//=============================================
+// loadModuleFromLib
+//=============================================
 static Module* loadModuleFromLib(void* handle) {
   typedef void* (*fnInstantiate_t)(void*);
 
@@ -53,6 +61,9 @@ static Module* loadModuleFromLib(void* handle) {
   return module;
 }
 
+//=============================================
+// destroyModule
+//=============================================
 static void destroyModule(Module* module) {
   typedef void (*fnDestroy_t)(void*);
   void* handle = module->handle();
@@ -66,6 +77,9 @@ static void destroyModule(Module* module) {
   dlclose(module->handle());
 }
 
+//=============================================
+// loadModuleFromPath
+//=============================================
 static Module* loadModuleFromPath(const string& path) {
   dlerror();
 
@@ -86,6 +100,9 @@ static Module* loadModuleFromPath(const string& path) {
   return loadModuleFromLib(handle);
 }
 
+//=============================================
+// satisfiesDependency_r
+//=============================================
 static bool satisfiesDependency_r(const ModuleSpec& needed, const ModuleSpec& spec) {
   if (needed.name == spec.name
     && needed.version <= spec.version
@@ -100,13 +117,19 @@ static bool satisfiesDependency_r(const ModuleSpec& needed, const ModuleSpec& sp
   return false;
 }
 
-static bool dependencyMet(const ModuleSpec& needed, list<Module*> modules) {
-  return any_of(modules.begin(), modules.end(), [&needed](Module* dep) {
-    return satisfiesDependency_r(needed, dep->getSpec());
+//=============================================
+// dependencyMet
+//=============================================
+static bool dependencyMet(const ModuleSpec& needed, const map<moduleName_t, Module*>& modules) {
+  return any_of(modules.begin(), modules.end(), [&needed](pair<moduleName_t, Module*> dep) {
+    return satisfiesDependency_r(needed, dep.second->getSpec());
   });
 }
 
-static bool dependenciesMet(const Module* module, list<Module*> modules) {
+//=============================================
+// dependenciesMet
+//=============================================
+static bool dependenciesMet(const Module* module, const map<moduleName_t, Module*>& modules) {
   const ModuleSpec& spec = module->getSpec();
 
   for (auto dep : spec.dependencies) {
@@ -118,38 +141,59 @@ static bool dependenciesMet(const Module* module, list<Module*> modules) {
   return true;
 }
 
+//=============================================
+// initialiseModules
+//=============================================
 static void initialiseModules(map<moduleName_t, Module*>& modules) {
   for (auto entry : modules) {
     entry.second->initialise();
   }
 }
 
+//=============================================
+// ModuleManager::ModuleManager
+//=============================================
 ModuleManager::ModuleManager() {}
 
+//=============================================
+// ModuleManager::foo
+//=============================================
 void ModuleManager::foo() {
   std::cout << "ModuleManager::foo()\n";
 }
 
-/*
-Module& ModuleManager::getModule(moduleName_t name) {
-  return *m_modules.at(name);
-}*/
-
+//=============================================
+// ModuleManager::loadModule
+//
+// Load and initialise module. Throw exception if dependencies are not met.
+//=============================================
 const ModuleSpec& ModuleManager::loadModule(const string& path) {
-  return loadModuleFromPath(path)->getSpec();
-}
+  Module* module = loadModuleFromPath(path);
+  const ModuleSpec& spec = module->getSpec();
 
-void ModuleManager::unloadModule(const ModuleSpec& spec) {
-  auto it = m_modules.find(spec.name);
-
-  if (it != m_modules.end()) {
-    m_modules.erase(it);
-    destroyModule(it->second);
+  if (m_modules.count(spec.name)) {
+    EXCEPTION("Module with name '" << spec.name << "' already loaded");
   }
+
+  if (dependenciesMet(module, m_modules)) {
+    m_modules[spec.name] = module;
+  }
+  else {
+    destroyModule(module);
+    EXCEPTION("Could not load module '" << spec.name << "'; Dependencies not met");
+  }
+
+  module->initialise();
+
+  return spec;
 }
 
-RootModule* ModuleManager::loadModules(const string& moduleDir) {
-  list<Module*> modules;
+//=============================================
+// ModuleManager::loadModules
+//
+// Load modules from the given directory. Throw exception if dependencies aren't met.
+//=============================================
+RootModule* ModuleManager::loadModules(const string& moduleDir, const set<moduleName_t>& names) {
   RootModule* rootModule = nullptr;
   DIR* dir = opendir(moduleDir.c_str());
 
@@ -159,27 +203,29 @@ RootModule* ModuleManager::loadModules(const string& moduleDir) {
       string path = moduleDir + string("/") + entity->d_name;
 
       Module* module = loadModuleFromPath(path);
+      const ModuleSpec& spec = module->getSpec();
 
-      if (module != nullptr) {
-        modules.push_back(module);
-
-        if (module->getSpec().isRoot) {
-          rootModule = dynamic_cast<RootModule*>(module);
-        }
+      if (m_modules.count(spec.name)) {
+        destroyModule(module);
+        EXCEPTION("Module with name '" << spec.name << "' already loaded");
       }
+
+      if (module->getSpec().isRoot) {
+        rootModule = dynamic_cast<RootModule*>(module);
+      }
+
+      m_modules[spec.name] = module;
     }
 
     entity = readdir(dir);
   }
 
-  for (auto module : modules) {
+  for (auto entry : m_modules) {
+    Module* module = entry.second;
     const ModuleSpec& spec = module->getSpec();
 
-    if (dependenciesMet(module, modules)) {
-      m_modules[spec.name] = module;
-    }
-    else {
-      destroyModule(module);
+    if (!dependenciesMet(module, m_modules)) {
+      unloadModule(spec.name);
       EXCEPTION("Could not load module '" << spec.name << "'; Dependencies not met");
     }
   }
@@ -189,6 +235,21 @@ RootModule* ModuleManager::loadModules(const string& moduleDir) {
   return rootModule;
 }
 
+//=============================================
+// ModuleManager::unloadModule
+//=============================================
+void ModuleManager::unloadModule(moduleName_t name) {
+  auto it = m_modules.find(name);
+
+  if (it != m_modules.end()) {
+    m_modules.erase(it);
+    destroyModule(it->second);
+  }
+}
+
+//=============================================
+// ModuleManager::unloadModules
+//=============================================
 void ModuleManager::unloadModules() {
   for (auto entry : m_modules) {
     m_modules.erase(entry.first);

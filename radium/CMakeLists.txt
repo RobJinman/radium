@@ -16,3 +16,8 @@ file(GLOB_RECURSE SRCS src/*.cpp)
 add_executable(radium ${SRCS})
 
 target_link_libraries(radium dl)
+
+set_target_properties(radium
+    PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../demo"
+)

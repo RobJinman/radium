@@ -1,4 +1,5 @@
 #include <iostream>
+#include <set>
 #include "radium.hpp"
 #include "module_manager.hpp"
 #include "api.hpp"
@@ -9,6 +10,7 @@
 #define MODULE_DIR "modules"
 
 
+using std::set;
 using std::cerr;
 
 
@@ -26,7 +28,9 @@ int Radium::start() {
     ModuleManager moduleManager;
     Api api(moduleManager);
 
-    RootModule* root = moduleManager.loadModules(MODULE_DIR);
+    set<moduleName_t> names;
+
+    RootModule* root = moduleManager.loadModules(MODULE_DIR, names);
 
     if (root != nullptr) {
       root->start(&api);

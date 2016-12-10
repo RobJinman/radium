@@ -3,12 +3,12 @@
 
 
 #include <string>
+#include "module.hpp"
 
 
 namespace radium {
 
 
-class ModuleSpec;
 class ModuleManager;
 
 class Api {
@@ -16,7 +16,7 @@ class Api {
 
   public:
     const ModuleSpec& loadModule(const std::string& path);
-    void unloadModule(const ModuleSpec& module);
+    void unloadModule(moduleName_t name);
 
     void foo(); // TODO
 

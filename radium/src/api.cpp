@@ -15,8 +15,8 @@ const ModuleSpec& Api::loadModule(const string& path) {
   return m_moduleManager.loadModule(path);
 }
 
-void Api::unloadModule(const ModuleSpec& spec) {
-  m_moduleManager.unloadModule(spec);
+void Api::unloadModule(moduleName_t name) {
+  m_moduleManager.unloadModule(name);
 }
 
 void Api::foo() {

@@ -4,6 +4,7 @@
 
 #include <string>
 #include <map>
+#include <set>
 #include "module.hpp"
 
 
@@ -14,15 +15,14 @@ class RootModule;
 
 class ModuleManager {
   friend class Radium;
-  
+
   public:
-    RootModule* loadModules(const std::string& moduleDir);
+    RootModule* loadModules(const std::string& moduleDir, const std::set<moduleName_t>& names);
     void unloadModules();
 
     const ModuleSpec& loadModule(const std::string& path);
-    void unloadModule(const ModuleSpec& spec);
+    void unloadModule(moduleName_t name);
 
-    //Module& getModule(moduleName_t name);
     void foo();
 
   private:

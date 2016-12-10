@@ -21,5 +21,5 @@ add_library(gl_renderer SHARED ${SRCS})
 
 set_target_properties(gl_renderer
     PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../../radium/build/modules"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../../demo/modules"
 )
