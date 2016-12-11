@@ -1,7 +1,7 @@
 #include <iostream>
 #include <list>
 #include "radium.hpp"
-#include "module_manager.hpp"
+#include "module_loader.hpp"
 #include "api.hpp"
 #include "exception.hpp"
 #include "root_module.hpp"
@@ -27,18 +27,18 @@ namespace radium {
 
 int Radium::start() {
   try {
-    ModuleManager moduleManager;
-    Api api(moduleManager);
+    ModuleLoader moduleLoader;
+    Api api(moduleLoader);
 
     list<string> libs = parseManifestFile("manifest.txt");
 
-    RootModule* root = moduleManager.loadModules(MODULE_DIR, libs);
+    RootModule* root = moduleLoader.loadModules(MODULE_DIR, libs);
 
     if (root != nullptr) {
       root->start(&api);
     }
 
-    moduleManager.unloadModules();
+    moduleLoader.unloadModules();
   }
   catch (Exception& ex) {
     cerr << ex.what() << "\n";

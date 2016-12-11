@@ -1,5 +1,5 @@
-#ifndef RADIUM_MODULE_MANAGER_HPP
-#define RADIUM_MODULE_MANAGER_HPP
+#ifndef RADIUM_MODULE_LOADER_HPP
+#define RADIUM_MODULE_LOADER_HPP
 
 
 #include <string>
@@ -13,7 +13,7 @@ namespace radium {
 
 class RootModule;
 
-class ModuleManager {
+class ModuleLoader {
   friend class Radium;
 
   public:
@@ -26,7 +26,7 @@ class ModuleManager {
     void foo();
 
   private:
-    ModuleManager();
+    ModuleLoader();
 
     std::map<moduleName_t, Module*> m_modules;
     RootModule* m_rootModule;

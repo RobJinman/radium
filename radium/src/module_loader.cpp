@@ -3,7 +3,7 @@
 #include <dlfcn.h>
 #include <algorithm>
 #include <list>
-#include "module_manager.hpp"
+#include "module_loader.hpp"
 #include "exception.hpp"
 #include "root_module.hpp"
 
@@ -75,7 +75,7 @@ static void destroyModule(Module* module) {
   fnDestroy(module);
 
   dlclose(module->handle());
-  DL_CHECK(nullptr, "Error unloading modulel");
+  DL_CHECK(nullptr, "Error unloading module");
 }
 
 //=============================================
@@ -152,24 +152,24 @@ static void initialiseModules(map<moduleName_t, Module*>& modules) {
 }
 
 //=============================================
-// ModuleManager::ModuleManager
+// ModuleLoader::ModuleLoader
 //=============================================
-ModuleManager::ModuleManager()
+ModuleLoader::ModuleLoader()
   : m_rootModule(nullptr) {}
 
 //=============================================
-// ModuleManager::foo
+// ModuleLoader::foo
 //=============================================
-void ModuleManager::foo() {
-  std::cout << "ModuleManager::foo()\n";
+void ModuleLoader::foo() {
+  std::cout << "ModuleLoader::foo()\n";
 }
 
 //=============================================
-// ModuleManager::loadModule
+// ModuleLoader::loadModule
 //
 // Load and initialise module. Throw exception if dependencies are not met.
 //=============================================
-const ModuleSpec& ModuleManager::loadModule(const string& path) {
+const ModuleSpec& ModuleLoader::loadModule(const string& path) {
   Module* module = loadModuleFromPath(path);
   const ModuleSpec& spec = module->getSpec();
 
@@ -191,11 +191,11 @@ const ModuleSpec& ModuleManager::loadModule(const string& path) {
 }
 
 //=============================================
-// ModuleManager::loadModules
+// ModuleLoader::loadModules
 //
 // Load modules from the given directory. Throw exception if dependencies aren't met.
 //=============================================
-RootModule* ModuleManager::loadModules(const string& moduleDir, const list<string>& libs) {
+RootModule* ModuleLoader::loadModules(const string& moduleDir, const list<string>& libs) {
   if (libs.size() == 0) {
     return nullptr;
   }
@@ -238,9 +238,9 @@ RootModule* ModuleManager::loadModules(const string& moduleDir, const list<strin
 }
 
 //=============================================
-// ModuleManager::unloadModule
+// ModuleLoader::unloadModule
 //=============================================
-void ModuleManager::unloadModule(moduleName_t name) {
+void ModuleLoader::unloadModule(moduleName_t name) {
   auto it = m_modules.find(name);
 
   if (it != m_modules.end()) {
@@ -255,9 +255,9 @@ void ModuleManager::unloadModule(moduleName_t name) {
 }
 
 //=============================================
-// ModuleManager::unloadModules
+// ModuleLoader::unloadModules
 //=============================================
-void ModuleManager::unloadModules() {
+void ModuleLoader::unloadModules() {
   while (m_modules.size() > 0) {
     unloadModule(m_modules.begin()->first);
   }

@@ -9,7 +9,7 @@
 namespace radium {
 
 
-class ModuleManager;
+class ModuleLoader;
 
 class Api {
   friend class Radium;
@@ -21,9 +21,9 @@ class Api {
     void foo(); // TODO
 
   private:
-    Api(ModuleManager& moduleManager);
+    Api(ModuleLoader& moduleLoader);
 
-    ModuleManager& m_moduleManager;
+    ModuleLoader& m_moduleLoader;
 };
 
 
