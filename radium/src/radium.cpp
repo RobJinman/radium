@@ -1,17 +1,19 @@
 #include <iostream>
-#include <set>
+#include <list>
 #include "radium.hpp"
 #include "module_manager.hpp"
 #include "api.hpp"
 #include "exception.hpp"
 #include "root_module.hpp"
+#include "manifest.hpp"
 
 
 #define MODULE_DIR "modules"
 
 
-using std::set;
+using std::list;
 using std::cerr;
+using std::string;
 
 
 int main() {
@@ -28,9 +30,9 @@ int Radium::start() {
     ModuleManager moduleManager;
     Api api(moduleManager);
 
-    set<moduleName_t> names;
+    list<string> libs = parseManifestFile("manifest.txt");
 
-    RootModule* root = moduleManager.loadModules(MODULE_DIR, names);
+    RootModule* root = moduleManager.loadModules(MODULE_DIR, libs);
 
     if (root != nullptr) {
       root->start(&api);

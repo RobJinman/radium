@@ -6,6 +6,7 @@
 #include "boulderdash_module.hpp"
 
 
+using std::cin;
 using std::cout;
 
 
@@ -36,11 +37,34 @@ void BoulderdashModule::initialise() {
 void BoulderdashModule::start(radium::Api* api) {
   cout << "BoulderdashModule::start()\n";
 
-  Renderer renderer;
-  Camera camera;
-  Mesh mesh;
+  radium::moduleName_t current = "gl_renderer";
 
-  renderer.draw(mesh, camera);
+  while (1) {
+    cout << "Load gl_renderer (1) or vulkan_renderer (2):";
 
-  api->foo();
+    char c;
+    cin >> c;
+
+    if (c == '1' && current != "gl_renderer") {
+      api->loadModule("modules/libgl_renderer.so");
+      api->unloadModule("vulkan_renderer");
+
+      current = "gl_renderer";
+    }
+    else if (c == '2' && current != "vulkan_renderer") {
+      api->loadModule("modules/libvulkan_renderer.so");
+      api->unloadModule("gl_renderer");
+
+      current = "vulkan_renderer";
+    }
+    else if (c == 'q') {
+      break;
+    }
+
+    Renderer renderer;
+    Camera camera;
+    Mesh mesh;
+
+    renderer.draw(mesh, camera);
+  }
 }

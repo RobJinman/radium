@@ -1,6 +1,6 @@
 #include <iostream>
+#include <cassert>
 #include <dlfcn.h>
-#include <dirent.h>
 #include <algorithm>
 #include <list>
 #include "module_manager.hpp"
@@ -25,7 +25,6 @@ using std::list;
 using std::map;
 using std::string;
 using std::pair;
-using std::set;
 
 
 namespace radium {
@@ -74,7 +73,9 @@ static void destroyModule(Module* module) {
   DL_CHECK(handle, "Error loading symbol 'destroy'");
 
   fnDestroy(module);
+
   dlclose(module->handle());
+  DL_CHECK(nullptr, "Error unloading modulel");
 }
 
 //=============================================
@@ -153,7 +154,8 @@ static void initialiseModules(map<moduleName_t, Module*>& modules) {
 //=============================================
 // ModuleManager::ModuleManager
 //=============================================
-ModuleManager::ModuleManager() {}
+ModuleManager::ModuleManager()
+  : m_rootModule(nullptr) {}
 
 //=============================================
 // ModuleManager::foo
@@ -193,31 +195,31 @@ const ModuleSpec& ModuleManager::loadModule(const string& path) {
 //
 // Load modules from the given directory. Throw exception if dependencies aren't met.
 //=============================================
-RootModule* ModuleManager::loadModules(const string& moduleDir, const set<moduleName_t>& names) {
-  RootModule* rootModule = nullptr;
-  DIR* dir = opendir(moduleDir.c_str());
+RootModule* ModuleManager::loadModules(const string& moduleDir, const list<string>& libs) {
+  if (libs.size() == 0) {
+    return nullptr;
+  }
 
-  dirent* entity = readdir(dir);
-  while (entity) {
-    if (entity->d_type == DT_REG) {
-      string path = moduleDir + string("/") + entity->d_name;
+  for (auto lib : libs) {
+    string path = moduleDir + "/" + lib;
 
-      Module* module = loadModuleFromPath(path);
-      const ModuleSpec& spec = module->getSpec();
+    Module* module = loadModuleFromPath(path);
+    const ModuleSpec& spec = module->getSpec();
 
-      if (m_modules.count(spec.name)) {
-        destroyModule(module);
-        EXCEPTION("Module with name '" << spec.name << "' already loaded");
-      }
-
-      if (module->getSpec().isRoot) {
-        rootModule = dynamic_cast<RootModule*>(module);
-      }
-
-      m_modules[spec.name] = module;
+    if (m_modules.count(spec.name)) {
+      destroyModule(module);
+      EXCEPTION("Module with name '" << spec.name << "' already loaded");
     }
 
-    entity = readdir(dir);
+    if (module->getSpec().isRoot) {
+      if (m_rootModule) {
+        EXCEPTION("Only 1 root module allowed per application");
+      }
+
+      m_rootModule = dynamic_cast<RootModule*>(module);
+    }
+
+    m_modules[spec.name] = module;
   }
 
   for (auto entry : m_modules) {
@@ -232,7 +234,7 @@ RootModule* ModuleManager::loadModules(const string& moduleDir, const set<module
 
   initialiseModules(m_modules);
 
-  return rootModule;
+  return m_rootModule;
 }
 
 //=============================================
@@ -242,8 +244,13 @@ void ModuleManager::unloadModule(moduleName_t name) {
   auto it = m_modules.find(name);
 
   if (it != m_modules.end()) {
-    m_modules.erase(it);
+    if (it->second->getSpec().isRoot) {
+      assert(m_rootModule == dynamic_cast<RootModule*>(it->second));
+      m_rootModule = nullptr;
+    }
+
     destroyModule(it->second);
+    m_modules.erase(it);
   }
 }
 
@@ -251,9 +258,8 @@ void ModuleManager::unloadModule(moduleName_t name) {
 // ModuleManager::unloadModules
 //=============================================
 void ModuleManager::unloadModules() {
-  for (auto entry : m_modules) {
-    m_modules.erase(entry.first);
-    destroyModule(entry.second);
+  while (m_modules.size() > 0) {
+    unloadModule(m_modules.begin()->first);
   }
 }
 
