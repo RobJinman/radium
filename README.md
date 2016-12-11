@@ -66,17 +66,19 @@ For the example application above, the end-user distribution will comprise the f
             minCompatible: "1.1.0"
             interface: NULL
 
-  Compile with headers:
-- radium/include
-- fun_game/include/public/
-- fun_game/include/private/
-
-
     radium_bootstrap*=1.1.2;; \
     /fun_game=1.2.3;radium_bootstrap*=1.1.2;
 
     radium_bootstrap* 1.1.2 ─▴1.1.2─
     fun_game 1.2.3          ─┴──────
+
+
+Compile with headers:
+
+- radium/include
+- fun_game/include/public/
+- fun_game/include/private/
+
 
 Can be replaced with:
 
@@ -104,14 +106,6 @@ Can be replaced with:
             minCompatible: "1.0.0"
             interface: NULL
 
-Compile with headers:
-
-- fun_game/include/public/
-- fun_game/include/private/
-- gui_base/include/public/
-- audio/include/public/
-
-
     radium_bootstrap*=1.0.0;; \
     /audio*=1.6.0;; \
     /gui_base=1.2.2;; \
@@ -121,6 +115,14 @@ Compile with headers:
     audio* 1.6.0            ─│─▴1.6.0───
     gui_base 1.2.2          ─│─║─▴1.2.2─
     fun_game 1.2.3          ─┴─╨─╨──────
+
+
+Compile with headers:
+
+- fun_game/include/public/
+- fun_game/include/private/
+- gui_base/include/public/
+- audio/include/public/
 
 
 ### An application consisting of two modules
